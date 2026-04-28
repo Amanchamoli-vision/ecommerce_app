@@ -100,7 +100,7 @@ class _WalletState extends State<Wallet> with TickerProviderStateMixin {
   void _handlePaymentError(PaymentFailureResponse response) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         backgroundColor: Colors.redAccent,
-        content: Text("Error: ${response.message}")));
+        content: Text("Error: ${response.message}")));  // ✅ Fix: \₹ → ${...}
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {}
@@ -222,7 +222,7 @@ class _WalletState extends State<Wallet> with TickerProviderStateMixin {
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
-                                      "\$${wallet!}",
+                                      "₹${wallet!}",  // ✅ Fix: \₹{wallet!} → ₹${wallet!}
                                       style: GoogleFonts.playfairDisplay(
                                         color: Colors.white,
                                         fontSize: 46,
@@ -286,10 +286,15 @@ class _WalletState extends State<Wallet> with TickerProviderStateMixin {
                                 color: Colors.grey, fontSize: 13)),
                         const SizedBox(height: 24),
 
-                        // ── Quick Amount Chips ──
+                        // ── Quick Amount Chips ──  ✅ Fix: asMap().entries.map() se isLast pass karo
                         Row(
                           children: ["100", "200", "300", "500"]
-                              .map((val) => _amountChip(val))
+                              .asMap()
+                              .entries
+                              .map((entry) => _amountChip(
+                                    entry.value,
+                                    isLast: entry.key == 3,
+                                  ))
                               .toList(),
                         ),
                         const SizedBox(height: 24),
@@ -322,7 +327,7 @@ class _WalletState extends State<Wallet> with TickerProviderStateMixin {
                                   color: Colors.grey[400], fontSize: 14),
                               prefixIcon: const Padding(
                                 padding: EdgeInsets.only(left: 16, right: 8),
-                                child: Text("\$",
+                                child: Text("₹",   // ✅ Fix: \₹ → ₹
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -407,7 +412,8 @@ class _WalletState extends State<Wallet> with TickerProviderStateMixin {
     );
   }
 
-  Widget _amountChip(String val) {
+  // ✅ Fix: isLast parameter add kiya taaki last chip ka right margin 0 rahe
+  Widget _amountChip(String val, {bool isLast = false}) {
     final bool isSelected = amountController.text == val;
     return Expanded(
       child: GestureDetector(
@@ -417,7 +423,7 @@ class _WalletState extends State<Wallet> with TickerProviderStateMixin {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.only(right: 10),
+          margin: EdgeInsets.only(right: isLast ? 0 : 10), // ✅ Fix: last chip no margin
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color:
@@ -435,14 +441,16 @@ class _WalletState extends State<Wallet> with TickerProviderStateMixin {
           ),
           child: Column(
             children: [
-              Text("\$$val",
-                  style: GoogleFonts.poppins(
-                    color: isSelected
-                        ? Colors.white
-                        : const Color(0xff2D1F14),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  )),
+              Text(
+                "₹$val",  // ✅ Fix: \₹val → ₹$val
+                style: GoogleFonts.poppins(
+                  color: isSelected
+                      ? Colors.white
+                      : const Color(0xff2D1F14),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
             ],
           ),
         ),
